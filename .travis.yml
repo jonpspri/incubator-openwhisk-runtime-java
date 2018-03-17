@@ -21,20 +21,67 @@ scala:
 - 2.11.8
 services:
 - docker
+
 before_install:
+  #  Use GPG encryption because it reduces the number of secrets that must be
+  #  managed across repositories.  When forking a repository as a core
+  #  contributor, contact maintainer to have a newly-encrypted GPG passphrase
+  #  communicated.
+  #
+  #  Note: ${TRAVIS_REPO_SLUG%/*} is repository owner.
+- if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+    for i in ./tools/travis/tls/${TRAVIS_REPO_SLUG%/*}/*/*.pem.gpg; do
+      echo "${multiarch_encryption_pwd}" | gpg --passphrase-fd 0 "$i";
+    done && cp -R ./tools/travis/tls/${TRAVIS_REPO_SLUG%/*} ./tls;
+  fi
 - "./tools/travis/setup.sh"
+
 install: true
 script:
-- "./tools/travis/build.sh"
-- "./tools/travis/deploy.sh"
-- "./tools/travis/test.sh"
+- "./tools/travis/build.sh && ./tools/travis/deploy.sh && ./tools/travis/test.sh"
+
 deploy:
 - provider: script
   script: "./tools/travis/publish.sh openwhisk ${TRAVIS_TAG%@*} ${TRAVIS_TAG##*@}"
+  skip_cleanup: true
   on:
     tags: true
     all_branches: true
+
 env:
   global:
+  #  --- begin: DOCKER_REGISTRY (defaults to docker.io)
+  #      + for jonpspri/incubator-openwhisk-runtime-java
+  - secure: "Q3RtW641RQCenHA7lmoqnPuBSbHliv4O9cLzOQc9F6dYXNo97cDzEM9s9vvkgeyyfXq4IADGF5pTzaQFFQ/gXHo7xR/efL7ym+fQJ8pTdUOiif3gC5w5cE8EkzOOYHMB6fTHiIfjjMcXZCBu4Op5jxG9lOYRxS0S00XnSh9qGHPIZPFYv7BWhSNdPJvVsVTQ63D0W+wXV8rsbZvIuGCGYY0ekAa7YPQrNDzsChYfQenIeTZICFzOkizXj7MQN9fyOz6s9Dm6yXfIkREpNJKxQWzh9455iAmEvZCKiJPizeAjhvCLlADuGKZpJzTBTe/x3jBoBZjDu0SWVXKCfeH5N69DrfOMTv4BtyCAkhUwDm41LfE+etW1MeL50DsX5PKdU7yn+ARlGHfzrB45LHUzXpz80EdRp+bQxzJGTydTkx1HWPKc6lEu0bxhQTwvEPIxFhgtyRXpXsDhCCbcoakikdK3Dh1EVGmsd6nDl6KTuG1BplSkPheSZb9HGqN98ChveErw4nDcaIo6u/1jF8hXy5HQDviRKkoavrnVphERvcmZLrbfmezaS0hvJhILSio0BwB33f4xkV0eqeVGLUYAoc9TnMQX0jzVIAZ36MLmhAG3HC2hNEDzyyjf4TqCs5k4kdpW/cprG/ZXcdvKvCI05wq75pkR4JJlV9IkTcleMyI="
+  #  ---
+
+  #  --- begin: DOCKER_USER and DOCKER_PASSWORD
+  #      + for apache/incubator-openwhisk-runtime-java
   - secure: D4kU9O6bs63Myb4jaEgw1O2Kuy6aTAUKEX1qZ0eYMDouLnPOPnZaFWmpISKTrJyz7hJH7yY8Cj7xl5qwsLB6JZZMtqT6yj5J/jkUJjyLKdQH81PrYy22rH99xS2t5A1dsC0A/Bf39R/qNc5tx1wCMVDF4O2rFsUtn+8vE+rn0nXsiPeWhhZagk/Hrq8YbwzDJHOGHfWe1nZIcU8MORzTriX7J2VAF0AcirPandMxff4FgzNLk432DN2GvgZIlNtZGT1DWLtJV/Sp3unD9abXr5xqNDIW+fHrMq8j/JdHC6+PFtZRFrl0Vr6X8c61PkB/ELGF2MyzNgBTnEaJixl1pianr91WK4y0oLUwpSJCz4yoQGVimAAtqMgNXjEyFMcpLClzS5TjMXKaUfi9mBn9GMCwLi3VAuVtMtH2IRW03PxIPyxkbj1j8Nrd0jh408MuMpuzyECgb+E5ffbd+0YD5XUNlTkYLFi4sEh2xpzvjGrNbrTe99zFrHt3e+dbmoahmaCyDRsxD2CDI8b++HyN78z/jO9A7kFc2TAZbWa6Xygkj1nEpnR1y4TB6eqdDo7Y6W20dLjeSSF8rACw3bM3lJh+K4/nv4Nlo6pfblhvs7T53ftst+tHpxJoQy/gDC0TcuyBThrHTeI1j7k4HkQyN+NqezBdFN2ElufjQ74ds2c=
   - secure: KzgDAV8O0ya6JBqSs4J4A7A+2n9Mgs5kRzhwwPdUg7ExuG2xXwWw1gafNPZwagfVOQfdqLzfF4tY8PPbTfloqEomFmYI/9PUHU8nMiMQkhEKkU3Od6HqqV9/WCf9vBrmqZHTPQNRVUvsbcOiYG1xtQr4JPHySJnk9VbgumRCT+f0xWK5mGK3CQqIo43F0TScjMONED/h7yueT+zFIJIfTiOXgtckbZdi7hErrVubbkduyzGSMek1Pfzy+m7Ek6jIaS4iD6duSRfxO9GVDTMee13cD3HuIWWfkZMkNiMlXBLmOPhb67lt/dgryxZ9zKxCzJFDW3Fx8uohoFu+sg8ZcyCeeDqMUfeML8rKAdNk72e2W9Vzedx6lxoTIhLYA3KLj7kL5wTxEq9QnSI/dMPqJUG/IA7Cr5fnJWRAlJ3IroQqBH8vNZ9zuoh/Ap4G2kXL1m4JECPhBlsX8i9RgDrFrab4My2IOHBw+ZA+cJ4h5njQUkuhMtlAhJ26jwQgYhn/sSMLgb4h5IX2iiRprsrg912vFg0ZrgHu1joIH/1XEGdArkQ7O9za4mowEmOuATux0drXTRKGe6z+/xaW35K8tQ52ToJRMN+GZBKlZoNIZd/rQ/y1Ikb6PD5Gfjk0WBnxYT5jV+ted7zCq3LskpWyvXtVTKoOqPOC/cDcY5JBPK8=
+  #      + for jonpspri/incubator-openwhisk-runtime-java
+  - secure: "dRZs/Zoxv9bU8CL0MFKcK18r9PqeewwfoA4ngn8qBZJ64suzu66LCEGcnhQdNBGtLPOeDZfoDFGGgWITH6qb+wZ1mWELRuF20nizzl1fc/lVj0y1l5GZ71yQzF5KSFvlvuTvaU+1Kh7agSh0cTXYn1WDZgfcxIkcQXnG68UK7ey7kdl4U2cX4olqWLlk1JRzXB+L4UYtDYD1KwHzHXIS0jOOmYBWXGqDgsEAnIeWK3tUq+/C5SMzQTsvZh8lzk4oLTiESqaWXFN3b7yF6IJyZq8Ey2T4K58W84U/sUYoJ51+Z59D/nGYob2+ZNswUHsIRTJHkKxF55tMKXv4vHI/ksczLyKEcGWRtvUWb33OXK8jm4KZpggPKYA8Le3wYVaC1ZgtMWFx6G7i4fEwgqqLpfdF71VJi1DeWIR7gr9VAT4a+GK8mE4vkMSci5TPpoU5NtHVTJmkIztoXLS1nNkhpUrcRxlClCxnvT4CBBG7YnC4ujW7mdIsUd/g2i+nac/GwMr6bjzVo0qSQze3vCGHNrQTM1cZi16sVUvoJHJG3/idZwhjG1NXSen2alib3szwfNRdPB6/nyXPLwCuLLSdb5RwWakzmYKsVx54Y9DCHApSRQXfGeTUVIC77aEqqHTXgdGp3OcLZEqfZmVTSeRzHDR+Kk7lysoHmt1dTXHOOX8="
+  - secure: "SCAyTTO9LvbL1EKTnzgDOedvmjMVpTujgtCO5NZSg/3DMgJMX4RCCwZaJBWG4T6IvZpMhOyTiturnvyN8gSg9jJdHXAqPrPysbcNdTJ5VnKV+cPcLr0KHYlgKB5kxdHpaFDQzMtAuwYfJ0QfnbZH2CIn1ufOGZc/fwX6VDfYoqaG06euM4XiToL12AhvQPCeA2aXdZxYirUcUcaCLQbpC33A+vkdZpDNHmrUa0uDNlFvcXUgMn0jjdF4rgCpcNjN5QVCcWNLGtwSzBcD5RZJzbo0zrh/AzHUaTk2JpC0ttggWx51pv/M5YSGyQ0ezHXNcrGus/IBF3isU0lIMZwyjOAq3WONEfZhDqcItETElGaB2eGm8Rp0qGSju8eMVii4f0RrGbC4OdXknvdO1WupNsdGg5jpDroZJNjaNzIz5QcfEWPOaK15TTRtuAGweDNVt1r4ZPSLPBoa3K7bQMzr/jnvqFqy8NXwyMOrfLVoeX5XORWyQodlZCgo66dg5F8VZBBzITtdEvT3Uq4XXEnJVgrPso/v2KuxfRfy+J4klZUr74ULSUMY4KXH61vOOdOYgryrauFCvN5Kmwrjxk1SZUvi/5/pGrV6kz8Ziazi80OgS9CHzJqjKkEjH79znfjWQfz0TT41ZvJi0H8NPn9rQwvW2Z2a2BfISxY75jEIauc="
+  #  ---
+
+  #  --- BEGIN: DOCKER_EMAIL
+  #      + for apache/incubator-openwhisk-runtime-java
+  - secure: "TpwLxA2euqFXGmXie2IrrZxd/8IGA5oMvuiselPCFpMOEBHFfe9FGnfoG10ST4DNrpZdW/eq+IHreNeeGDMk2v7TaDnG//HszEARfLQimJqvNAOowf+n//nAZdzHnxWioH75rdzeY/4Rg+IQwfIcgzk+roYNe7/TeI5edFi6GKbSVWbhPO6iZ7irmHXWKEv+N0nU4GeBpWC65+r9vpq4UbwBA2+6hllN/uB67iHnWpJJ7uWrMXE7RUXbzsLPjOFGyuYlH8v4PBkC0XcNPHzzqpf2W0acIuH5F84cbTVuO2+OtMUor8nbf/oqLim1Ya5LwM+DjsTCAU3pYogzAvBt3auBxqRWy7cy5HU6lO9ixpDxIpT2JgSbkwKOxQuOXFCKHFFyEa+RFblr08nwGHN/Ig4W7mS/uI4uxouRNshQ/TuDTyRvzDjuIoHcPU4IRmXNRDzfmSAAYycuooVhJ+ojaAoNlJnebYwLnZDiEwzn9Htq3LyY0qE5Fx4q0DB+5nR0lcV0ZoIoWzXTeuQQaQTDL4wzQKGGF5b2OwoSpfTJXXOSwEjpwkqzDkGokmWXvkqh70X59zgWolRjQ+2SX+Bo56+pHRBol2I76cfhIoSv3a2E965JhhgB3X05BzL7G67TY8CSlLyfbf2nsZqFP1UtzQdM6IBZJmFZhr2oxRnfqAg="
+  #      + for jonpspri/incubator-openwhisk-runtime-java
+  - secure:  "uSgY+iVz9aijOp5nzuesGLDz30GBW6SX+7yercJ58OarzsxQut0vJO9UGK8fAYJLMNX3AQ4hLv2zGFAM5XZCLAilJjVfxVGO+mrWCrE5jvFcoGQT9Sd7HYgxbd312hDEBPGLjMvm3+BaOSCIu89llGT46B2JqQGeCyWaNXOlE973c5u7goqlGKKhLDRrH22KuoF/dtEC/6j8iosT+BxhzI8dIQQ0a3pPitSGsGbX8d9iQDK7/GerhU9sIcHwfNhD5FipOmYHYUg68wxOrdbSmxcfnfWdyhZlFr3GpSBtPaGy68B+SSgECOBmH41TKgrZnKsqa22H3YGc6+lZi4q/dRsWQ/bZqWcbzPYVpenEqEONZ/YSVWetd00SMXux10g0JUw5CZsikTmR8UJf2ZFoRTAyawFWI1ZCEugVUe50xuA3T+ubB0Uhhy+qe/Nyjmk14mTkrAGDJUW3MupNBKhb24uujkIgXxz3+1X2UcgHPm0svzJ0U/60M+HkJzkNMFXeV7+WY+HLO1grjwToMLYrS0qrCHmxzc7G5XV4xrhZmvl1vNN+Lm1SE4k6RnzieZidyjZJqTkaB99X5w2a70cnlkfVQ34S60304MlqV2S7jSROCYebHxJ9N05VqWzI3TEkSZb6c2WyMPF6UhS0XnRzMlLsvRx0eGb5hx/2OV2+IvU="
+  #  ---
+
+  #  --- BEGIN: The secure entry immediately below is where the GPG passphrase is encrypted by Travis
+  #      + for apache/incubator-openwhisk-runtime-nodejs
+  - secure: "opSakPQn9OSDYXxZmn/ode4DQ5JlZ9GynsvL8SuvH2/05VEVOHya1p0mv7rqmhgLzUs1nYlI89O7hPTKKRqilx6rD2tx5MFNMC35/DRyWIR62RLlkwlIC2Ox4Zr1UEZnkOTcEgQ9LwtkMjv7lm3zf+BqWCExeXLTRM0aUjd4DfqLtXY3ROn0iNgR0Rcz2pRq1nLqvLMU7/ER13fHWgIwbdSJk8BEZdeVQW9kC30f+eHps4ptg5hE68QISGjU5cYU1jRtrefAWReI0y42p8rbmRfRItPoZtP9Lb6Ptb/7nHFVGTLQtEKMJszpvG6O+ZPXcKZFkLgw+sdRUSdfukATgAhfTfd5B+KT9xNj0BcV5sXHDs3I143cjrCdJCRKqmm87eb05rT4/TzEAlO+7n9lm/+K2IH/h76RRa8mL24e2y+2kMyrKgeYVB53h9JyyEkfEV48Thjn4ALucw8ZKyZs4Th00IFxdJuPON06Y0syp3ZmqHPbTgd/0lG7s6hMvbFp0TSyi1AX/cpF1LCGEM8lF0U+oje4wCmYSC8UBX5SxGkqDZkFmLJ/4SA3Fn6Z91WERqB1VuU5m5uPWOXkyt7XWFxv9dvyV/v/ZNg8/wWlrgEeJKm02keDcCppoObrTLIdiQgpQwmwSH3fMIjDMf40S/GoWw1ipdQ6Cso1l3ftvmE="
+  #      + for jonpspri/incubator-openwhisk-runtime-java
+  - secure: "DMlKSE9mymIB7ZbgEV0c7ShlLKXC7NemAiv3Rhc3Dn6jKFYBaf5uX9OhcLq4Hc7ywPZuC78pU33vSy2/ISnIgFt0WMfTSQ9VGKctgy/CgDpV+wSW5gt3eGC+5RE7oRlK7S2Up6WgQs/KN2yMuL9pTh0kVhR6Xx5IXWbMjznPSCyQ+GxSlcG+BOP7kDPanpWg8nxSUzY/HOVh8/1qu0rLuY6uGjf3y32zUJ2XcQrxLVpHkw9j+2ofVTy9FjDYgOHBXL69O1GJ6FBN+2mUpNPQogXt6IP5CZwsp3gMpdB9NgD5g2qOds9wpmMaFmcBQcFfem6E40W+DQaKajNF227Z8gunRzKCY+UPHXeBUVo170RXGPvsn5pVfP/fHN1wBH1BLYRq4TBsWSS9knb3VqzS4QegNTC6G9iI5QriTesXIDV1QCcSZIhkEaCaQB3qfiA6sMqkMYyg9QG+5JsvghA5qb8a2aKc8f00o2HACTPvQSWrBXAsrSZ0HWaZhrbKn8RVY1hXQRKlxLpBdvGrHh1glTAx+saOwnhoNzBz7LPGtu3GMwtbYqbjR85xRL/YxV6qcbaIpfZvWmspzKu/VQvHAHdccyQiQfXkY/+oWzzNu180VH8T4XgDdgHCJjg4S1DIdIjxv5Y+UPtOPscwbutdh3MhAX+w764sHJ83qZWbNYg="
+  #  ---
+
+  #  --- BEGIN: The 'docker_local_json' variable configures docker engines
+  #             to use for multi-architecture builds.
+  #      + for apache/incubator-openwhisk-runtime-nodejs
+"EzivanCPG+axFFDiT/plMYHIm0ne2KcdHnetl+2wfJ2n598mAPYRCID3G4sWcxYf/fS8BsP8NURNeRmCZtTyXxYyk0/ZJfTwGKVZp7ffekKYE84J+1L00/pO0sEauAZ5jL5QPqkKOyGgyl0j+9ZDwkEtEwk/Js5EvYHos+xGJoX5pYwAQu0hxlPmAY7liY4Bmti9BMmqDLpQXd1E7zq3pRpaewP8vUFfiSJqtKNgEQbDoaf6NI8/xsa8bJpGyBaz/IKOukMszUvknPF+jBSRx0mBX7B6EWyi4YnzBmh0SX8rHt3ih8EmDSlXOxLPdqk09xcJdCgA7TIMFruTs69taBiTbS4rAlYVC3WVSHt0LqiKtqeQNF5giA21WSavISy4jDdDobISk3sZ5lrJUlygx2CtkjVKjc/xjninjjczCRafAbkzxuetXEGo59tFu5SibAo9iT6SD+YRj2GssRLRWc2nrt/eZZff1n4Ox/LhpY3nE9NqFqR9fvlJ8M3n818S6MtxV9X/llHKD76d372CfcqJzP7OJK+h5k8/gYouh1Fs94R7dRoBM5Ywhmt4qFf7u7wtWPbWWlhp1grtrCSW/+sgNvsZ0ofG5142UV9k2hGuo/1OQ4EpeK3Stdn50Pa1sIHwkJy1LX+NWys5TqTXC1hoiG52AcD+dhJ7SisG70E="
+  #      + for jonpspri/incubator-openwhisk-runtime-java
+  - secure: "D6aOFomBZmQAuCnLqKHooMQf3zevdEEPhNVENbgmlzzJQjKFDX4rHmEAaVvnJ9AuXNfMkENbHaJkijZ5Dky0cvluZSlWXyrcloWTnWwJuDEQn3du5GQupNnbfkl06PSUbz/XizxE5/6sdxmnGwTFa1SDgrait2BttoSQb9soIYmaEldx/NToz/FTxm6tcBNLY556qabhOPaF/uodahZqQShvXBTW9jUkwv43x+cNxXMDmVy+PYrA60jZG+gyB8JglAp4DiE+CPt37sOf/nlvvnEe7Yju1Rmbwju7ZQWti663u21wTiDvJKZixlgKxHqTI/6Q1YocgTaWKXjfinqA/qeeJtGgy21zljQQvQdN1dm8cQXzX9zAZr2+4/ZxEIwLkztQq9Vv0SI2faL8L1/4ORhHA0qsxVE1zPBi9EO6Hp1NKjGOw8CPNIGkHNhUXPRZx/wQY79WAG6k1tsj0C5wN9V//LpxqlqGMIYPBpPSCFllPEBiY24gb2ePPu00CJe7kF/OyucL0EG53PthOap7KGZQFln5WZzN47a3I8xkkw5jfQle/FgfE7GTL35jxtk34AWzT/KH5GitOwfayOTYGLgi0z/0HBLPaS7VwQ6ecpYmshJ/jnCPMAr0nmLAbDU96y/CX9NdCsM/77h1Fn/x/uaTJ7RNDXjLGzwQNLGK3EM="
+  #  ---
