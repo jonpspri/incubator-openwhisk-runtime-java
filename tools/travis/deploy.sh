@@ -20,23 +20,23 @@ set -ex
 
 # Build script for Travis-CI.
 
-SCRIPTDIR=$(cd $(dirname "$0") && pwd)
-ROOTDIR="$SCRIPTDIR/../.."
-WHISKDIR="$ROOTDIR/../openwhisk"
+SCRIPTDIR="$(cd $(dirname "$0") && pwd)"
+ROOTDIR="$(cd "$SCRIPTDIR/../.." && pwd)"
+WHISKDIR="$(cd "$ROOTDIR/../openwhisk" && pwd)"
 
-export OPENWHISK_HOME=$WHISKDIR
+export OPENWHISK_HOME="$WHISKDIR"
 
 IMAGE_PREFIX="testing"
 
 # Deploy OpenWhisk
 cd $WHISKDIR/ansible
-ANSIBLE_CMD="ansible-playbook -i ${ROOTDIR}/ansible/environments/local -e docker_image_prefix=${IMAGE_PREFIX}"
-$ANSIBLE_CMD setup.yml
-$ANSIBLE_CMD prereq.yml
-$ANSIBLE_CMD couchdb.yml
-$ANSIBLE_CMD initdb.yml
-$ANSIBLE_CMD wipe.yml
-$ANSIBLE_CMD openwhisk.yml
+ANSIBLE_ARGS=(-i "${ROOTDIR}/ansible/environments/local" -e "docker_image_prefix='${IMAGE_PREFIX}'" )
+ansible-playbook "${ANSIBLE_ARGS[@]}" setup.yml
+ansible-playbook "${ANSIBLE_ARGS[@]}" prereq.yml
+ansible-playbook "${ANSIBLE_ARGS[@]}" couchdb.yml
+ansible-playbook "${ANSIBLE_ARGS[@]}" initdb.yml
+ansible-playbook "${ANSIBLE_ARGS[@]}" wipe.yml
+ansible-playbook "${ANSIBLE_ARGS[@]}" openwhisk.yml
 
 docker images
 docker ps
@@ -47,8 +47,8 @@ curl -s -k https://172.17.0.1/api/v1 | jq .
 
 #Deployment
 WHISK_APIHOST="172.17.0.1"
-WHISK_AUTH=`cat ${WHISKDIR}/ansible/files/auth.guest`
-WHISK_CLI="${WHISKDIR}/bin/wsk -i"
+WHISK_AUTH="$(cat "${WHISKDIR}/ansible/files/auth.guest")"
+WHISK_CLI="${WHISKDIR}/bin/wsk -i"  #Note:  Not great syntax, but passible for now
 
 ${WHISK_CLI} property set --apihost ${WHISK_APIHOST} --auth ${WHISK_AUTH} 
 ${WHISK_CLI} property get
