@@ -39,14 +39,13 @@ docker tag openwhisk/invoker ${IMAGE_PREFIX}/invoker
 docker pull openwhisk/nodejs6action
 docker tag openwhisk/nodejs6action ${IMAGE_PREFIX}/nodejs6action
 
-TERM=dumb ./gradlew \
+./gradlew --console=plain \
 :common:scala:install \
 :core:controller:install \
 :core:invoker:install \
 :tests:install
 
-# Build runtime
+# Build runtime -- TODO: This is the only implementation-dependent section -- it should be
+#                        factored into a separate script or a configuration
 cd $ROOTDIR
-TERM=dumb ./gradlew \
-distDocker \
--PdockerImagePrefix=${IMAGE_PREFIX}
+./gradlew --console=plain dockerBuildImage -PdockerImagePrefix=${IMAGE_PREFIX}
