@@ -20,12 +20,12 @@ set -e
 
 # Build script for Travis-CI.
 
-SCRIPTDIR=$(cd $(dirname "$0") && pwd)
-ROOTDIR="$SCRIPTDIR/../.."
-HOMEDIR="$SCRIPTDIR/../../../"
+SCRIPTDIR=$(cd "$(dirname "$0")" && pwd)
+ROOTDIR=$(cd "$SCRIPTDIR/../.." && pwd)
+HOMEDIR=$(cd "$SCRIPTDIR/../../../" && pwd)
 
 # OpenWhisk stuff
-cd $HOMEDIR
+cd "$HOMEDIR"
 git clone --depth=1 https://github.com/apache/incubator-openwhisk.git openwhisk
 cd openwhisk
 ./tools/travis/setup.sh

@@ -20,25 +20,16 @@ set -ex
 
 # Build script for Travis-CI.
 
-SCRIPTDIR=$(cd $(dirname "$0") && pwd)
-ROOTDIR="$SCRIPTDIR/../.."
-WHISKDIR="$ROOTDIR/../openwhisk"
+SCRIPTDIR=$(cd "$(dirname "$0")" && pwd)
+ROOTDIR=$(cd "$SCRIPTDIR/../.." && pwd) 
+WHISKDIR$(cd ="$ROOTDIR/../openwhisk" && pwd)
 
 export OPENWHISK_HOME=$WHISKDIR
 
 IMAGE_PREFIX="testing"
 
-# Build OpenWhisk
-cd $WHISKDIR
-
-#pull down images
-docker pull openwhisk/controller
-docker tag openwhisk/controller ${IMAGE_PREFIX}/controller
-docker pull openwhisk/invoker
-docker tag openwhisk/invoker ${IMAGE_PREFIX}/invoker
-docker pull openwhisk/nodejs6action
-docker tag openwhisk/nodejs6action ${IMAGE_PREFIX}/nodejs6action
-
+# Build OpenWhisk test-support libraries
+cd "$WHISKDIR"
 ./gradlew --console=plain \
 :common:scala:install \
 :core:controller:install \
@@ -46,6 +37,6 @@ docker tag openwhisk/nodejs6action ${IMAGE_PREFIX}/nodejs6action
 :tests:install
 
 # Build runtime -- TODO: This is the only implementation-dependent section -- it should be
-#                        factored into a separate script or a configuration
-cd $ROOTDIR
+#                        factored into a separate script or a configuration or parameterized
+cd "$ROOTDIR"
 ./gradlew --console=plain dockerBuildImage -PdockerImagePrefix=${IMAGE_PREFIX}

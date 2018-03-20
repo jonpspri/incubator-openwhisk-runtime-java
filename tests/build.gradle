@@ -7,19 +7,23 @@ repositories {
     mavenLocal()
 }
 
-tasks.withType(Test) {
-    testLogging {
-        events "passed", "skipped", "failed"
-        showStandardStreams = true
-        exceptionFormat = 'full'
-    }
-    outputs.upToDateWhen { false } // force tests to run every time
-}
-
 dependencies {
     compile "org.scala-lang:scala-library:${gradle.scala.version}"
     compile "org.apache.openwhisk:openwhisk-tests:${gradle.openwhisk.version}:tests"
     compile "org.apache.openwhisk:openwhisk-tests:${gradle.openwhisk.version}:test-sources"
+}
+
+apply plugin: 'com.bmuschko.docker-remote-api'
+
+tasks.withType(Test) {
+    systemProperty "docker.host", docker.url
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+        exceptionFormat = 'full'
+        showCauses = true
+    }
+    outputs.upToDateWhen { false } // force tests to run every time
 }
 
 tasks.withType(ScalaCompile) {

@@ -20,13 +20,13 @@ set -ex
 
 # Build script for Travis-CI.
 
-SCRIPTDIR=$(cd $(dirname "$0") && pwd)
-ROOTDIR="$SCRIPTDIR/../.."
-WHISKDIR="$ROOTDIR/../openwhisk"
+SCRIPTDIR=$(cd "$(dirname "$0")" && pwd)
+ROOTDIR=$(cd "$SCRIPTDIR/../.." && pwd)
+WHISKDIR=$(cd "$ROOTDIR/../openwhisk" && pwd)
 
 export OPENWHISK_HOME=$WHISKDIR
 
-cd ${ROOTDIR}
+cd "${ROOTDIR}"
 TERM=dumb ./gradlew :tests:checkScalafmtAll
 TERM=dumb ./gradlew :tests:test
 
