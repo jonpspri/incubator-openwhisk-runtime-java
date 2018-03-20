@@ -22,7 +22,7 @@ set -ex
 
 SCRIPTDIR=$(cd "$(dirname "$0")" && pwd)
 ROOTDIR=$(cd "$SCRIPTDIR/../.." && pwd) 
-WHISKDIR$(cd ="$ROOTDIR/../openwhisk" && pwd)
+WHISKDIR=$(cd "$ROOTDIR/../openwhisk" && pwd)
 
 export OPENWHISK_HOME=$WHISKDIR
 
