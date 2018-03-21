@@ -15,10 +15,9 @@
 #
 
 sudo: required
-group: deprecated-2017Q3
-language: scala
-scala:
-- 2.11.8
+language: java
+jdk:
+- openjdk8
 services:
 - docker
 
