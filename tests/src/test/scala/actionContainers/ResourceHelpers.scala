@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package runtime.actionContainers
+package actionContainers
 
 import java.net.URI
 import java.net.URLClassLoader

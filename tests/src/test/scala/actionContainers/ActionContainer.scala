@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package runtime.actionContainers
+package actionContainers
 
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -89,7 +89,7 @@ object ActionContainer {
   }
 
   private lazy val dockerCmd: String = {
-    s"$dockerBin --host '${System.getProperty("docker.host")}' "
+    s"$dockerBin --host ${System.getProperty("docker.host")}"
   }
 
   private def docker(command: String): String = s"$dockerCmd $command"
