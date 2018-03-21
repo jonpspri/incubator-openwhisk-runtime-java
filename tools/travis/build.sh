@@ -18,6 +18,11 @@
 
 set -ex
 
+# Configure the locale in support of unicode
+export LANG="en_US.UTF-8" 
+export LANGUAGE="en_US:en" 
+export LC_ALL="en_US.UTF-8" 
+
 # Build script for Travis-CI.
 
 SCRIPTDIR=$(cd "$(dirname "$0")" && pwd)
