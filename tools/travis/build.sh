@@ -30,6 +30,10 @@ IMAGE_PREFIX="testing"
 
 # Build OpenWhisk test-support libraries
 cd "$WHISKDIR"
+
+# Hack to remove these until PR 
+rm -rf tests/src/test/scala/actionContainers
+
 ./gradlew --console=plain \
 :common:scala:install \
 :core:controller:install \
